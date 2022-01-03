@@ -11,6 +11,7 @@
         "laravel/framework": "^8.75",
         "laravel/sanctum": "^2.11",
         "laravel/tinker": "^2.5",
+        "webscraperio/api-client-php": "^1.2",
         "weidner/goutte": "^2.1"
     },
     "require-dev": {

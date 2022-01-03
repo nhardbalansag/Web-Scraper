@@ -10,7 +10,7 @@ class WebScraperController extends Controller
 {
     public function GetCollection(){
         $client = new Client();
-        $url =  "http://student-kiosk.test/";
+        $url =  "https://rarity.tools/cryptopunks";
         $page = $client->request('GET', $url);
 
         $collectionSize = $page->filter("div");
@@ -20,10 +20,9 @@ class WebScraperController extends Controller
         });
     }
 
-
     public function GetCollectionAPI(){
         $client = new Client();
-        $url =  "http://student-kiosk.test/";
+        $url =  "https://rarity.tools/cryptopunks";
         $page = $client->request('GET', $url);
 
         $collections = array();

@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1f752c110b2e130e136d4f2b24c6f3b1",
+    "content-hash": "4c574ca1beee9f11bf36aa6a9c1f94f8",
     "packages": [
         {
             "name": "asm89/stack-cors",
@@ -4792,6 +4792,44 @@
                 "validate"
             ],
             "time": "2021-03-09T10:59:23+00:00"
+        },
+        {
+            "name": "webscraperio/api-client-php",
+            "version": "v1.2.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/webscraperio/api-client-php.git",
+                "reference": "011931183017859585953664d1d070148bfda4b8"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/webscraperio/api-client-php/zipball/011931183017859585953664d1d070148bfda4b8",
+                "reference": "011931183017859585953664d1d070148bfda4b8",
+                "shasum": ""
+            },
+            "require": {
+                "guzzlehttp/guzzle": "^7.0.1",
+                "php": "^7.3 || ^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^9.5"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "WebScraper\\ApiClient\\": "src/ApiClient"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "API client for webscraper.io",
+            "keywords": [
+                "web scraper",
+                "webscraperio"
+            ],
+            "time": "2021-09-29T12:03:48+00:00"
         },
         {
             "name": "weidner/goutte",
