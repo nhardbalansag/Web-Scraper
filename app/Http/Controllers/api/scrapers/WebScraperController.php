@@ -13,7 +13,11 @@ class WebScraperController extends Controller
         $url =  "http://student-kiosk.test/";
         $page = $client->request('GET', $url);
 
-        dd($page->filter("h1")->text());
+        $collectionSize = $page->filter("div");
+
+        $collectionSize->each(function($item){
+            dump($item->filter('div')->text());
+        });
     }
 
 
@@ -21,9 +25,31 @@ class WebScraperController extends Controller
         $client = new Client();
         $url =  "http://student-kiosk.test/";
         $page = $client->request('GET', $url);
-        $data = $page->filter("h1")->text();
 
         $collections = array();
+        $properties = array();
+
+        // get collection details
+        $collectionName = $page->filter("h1")->text();
+        $collectionSize = $page->filter("div");
+        $propertyCount = null;
+        $collectionItem = null;
+
+        array_push(
+            $properties,
+            array(
+                "property_name" => 'attributeCount',
+                "value" => 2,
+                "scoreContribution" => 21,
+                "supply" => 345
+            ),
+            array(
+                "property_name" => 'attributeCount',
+                "value" => 2,
+                "scoreContribution" => 21,
+                "supply" => 345
+            )
+        );
 
         array_push(
             $collections,
@@ -31,28 +57,12 @@ class WebScraperController extends Controller
                 "id" => 1,
                 "score" => 84.74,
                 "rank" => 7092,
-                "properties" => array(
-                    "property_name" => 'attributeCount',
-                    "value" => 2,
-                    "scoreContribution" => 21,
-                    "supply" => 345
-                )
-            ),
-            array(
-                "id" => 1,
-                "score" => 84.74,
-                "rank" => 7092,
-                "properties" => array(
-                    "property_name" => 'attributeCount',
-                    "value" => 2,
-                    "scoreContribution" => 21,
-                    "supply" => 345
-                )
+                "properties" => $properties
             )
         );
 
         $data = array(
-            "collectionName" => "test",
+            "collectionName" => $collectionName,
             "collectionSize" => "test",
             "propertyCount" => "test",
             "items" => $collections
