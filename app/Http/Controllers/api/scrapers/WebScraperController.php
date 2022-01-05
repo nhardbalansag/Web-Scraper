@@ -80,6 +80,10 @@ class WebScraperController extends Controller
                 $collections = array();
                 $properties = array();
 
+                $exist = DB::table('collection_models')
+                        ->where('collectionName', $request)
+                        ->first();
+
                 $collection_item = DB::table('collection_item_models')
                                 ->join('collection_models', 'collection_models.id', '=', 'collection_item_models.collection_id')
                                 ->select('collection_item_models.*')
@@ -251,6 +255,10 @@ class WebScraperController extends Controller
                 $collections = array();
                 $properties = array();
 
+                $exist = DB::table('collection_models')
+                        ->where('collectionName', $request)
+                        ->first();
+
                 $collection_item = DB::table('collection_item_models')
                                 ->join('collection_models', 'collection_models.id', '=', 'collection_item_models.collection_id')
                                 ->select('collection_item_models.*')
@@ -302,7 +310,7 @@ class WebScraperController extends Controller
                 return response()->json($data,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
             }catch(Exception $err){
                 DB::rollback();
-                dd($err);
+                return response()->json($err,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
             }
         }else{
             $collections = array();
