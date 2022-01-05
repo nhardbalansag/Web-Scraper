@@ -7,4 +7,4 @@ Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/test/{id}', [WebScraperController::class, 'GetCollection']);
+// Route::get('/test/{id}', [WebScraperController::class, 'GetCollection']);
