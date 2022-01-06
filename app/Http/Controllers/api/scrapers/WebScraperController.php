@@ -31,13 +31,6 @@ class WebScraperController extends Controller
             $collection_id = null;
             DB::beginTransaction();
             try{
-                $collection = new CollectionModel;
-                $collection->collectionName = $collectionName;
-                $collection->collectionSize = $collectionSize;
-                $collection->propertyCount = "0"; //pending
-                $collection->save();
-
-                $collection_id = $collection->id;
 
                 $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
 
@@ -45,6 +38,20 @@ class WebScraperController extends Controller
                 $item_response_data = json_decode($item_json_data);
                 $item_ids = $item_response_data->items;
                 $item_info = $item_response_data->basePropDefs;
+                $property_count = 0;
+                for($i = 0; $i < count($item_info); $i++){
+                    if($item_info[$i]->type === "category"){
+                        $property_count++;
+                    }
+                }
+
+                $collection = new CollectionModel;
+                $collection->collectionName = $collectionName;
+                $collection->collectionSize = $collectionSize;
+                $collection->propertyCount = "0"; //pending
+                $collection->save();
+
+                $collection_id = $collection->id;
 
                 for($i = 0; $i < count($item_ids); $i++){
                     $CollectionItemModel = new CollectionItemModel;
@@ -207,20 +214,27 @@ class WebScraperController extends Controller
             $collection_id = null;
             DB::beginTransaction();
             try{
-                $collection = new CollectionModel;
-                $collection->collectionName = $collectionName;
-                $collection->collectionSize = $collectionSize;
-                $collection->propertyCount = "0"; //pending
-                $collection->save();
-
-                $collection_id = $collection->id;
-
                 $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
 
                 $item_json_data = file_get_contents($item_api_url);
                 $item_response_data = json_decode($item_json_data);
                 $item_ids = $item_response_data->items;
                 $item_info = $item_response_data->basePropDefs;
+
+                $property_count = 0;
+                for($i = 0; $i < count($item_info); $i++){
+                    if($item_info[$i]->type === "category"){
+                        $property_count++;
+                    }
+                }
+
+                $collection = new CollectionModel;
+                $collection->collectionName = $collectionName;
+                $collection->collectionSize = $collectionSize;
+                $collection->propertyCount = $property_count; //pending
+                $collection->save();
+
+                $collection_id = $collection->id;
 
                 for($i = 0; $i < count($item_ids); $i++){
                     $CollectionItemModel = new CollectionItemModel;
