@@ -22,15 +22,29 @@ class WebScraperController extends Controller
                 ->first();
 
         if(!$exist){
-            $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
-            $collection_json_data = file_get_contents($collection_api_url);
-            $collection_response_data = json_decode($collection_json_data);
 
-            $collectionName = $collection_response_data->slug;
-            $collectionSize = $collection_response_data->stats->total_supply;
-            $collection_id = null;
             DB::beginTransaction();
             try{
+                $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
+                $collection_json_data = file_get_contents($collection_api_url);
+                $collection_response_data = json_decode($collection_json_data);
+
+                $collectionName = $collection_response_data->slug;
+                $collectionSize = $collection_response_data->stats->total_supply;
+                $collection_id = null;
+                $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
+
+                $item_json_data = file_get_contents($item_api_url);
+                $item_response_data = json_decode($item_json_data);
+                $item_ids = $item_response_data->items;
+                $item_info = $item_response_data->basePropDefs;
+                $property_count = 0;
+                for($i = 0; $i < count($item_info); $i++){
+                    if($item_info[$i]->type === "category"){
+                        $property_count++;
+                    }
+                }
+
                 $collection = new CollectionModel;
                 $collection->collectionName = $collectionName;
                 $collection->collectionSize = $collectionSize;
@@ -38,13 +52,6 @@ class WebScraperController extends Controller
                 $collection->save();
 
                 $collection_id = $collection->id;
-
-                $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
-
-                $item_json_data = file_get_contents($item_api_url);
-                $item_response_data = json_decode($item_json_data);
-                $item_ids = $item_response_data->items;
-                $item_info = $item_response_data->basePropDefs;
 
                 for($i = 0; $i < count($item_ids); $i++){
                     $CollectionItemModel = new CollectionItemModel;
@@ -133,7 +140,7 @@ class WebScraperController extends Controller
                 );
             }catch(Exception $err){
                 DB::rollback();
-                dd($err);
+                dd($err->getMessage());
             }
         }else{
             $collections = array();
@@ -191,29 +198,20 @@ class WebScraperController extends Controller
 
     public function GetCollectionAPI($request){
 
-        $request_collection = 'cryptopunks';
-
         $exist = DB::table('collection_models')
                 ->where('collectionName', $request)
                 ->first();
 
         if(!$exist){
-            $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
-            $collection_json_data = file_get_contents($collection_api_url);
-            $collection_response_data = json_decode($collection_json_data);
-
-            $collectionName = $collection_response_data->slug;
-            $collectionSize = $collection_response_data->stats->total_supply;
-            $collection_id = null;
             DB::beginTransaction();
             try{
-                $collection = new CollectionModel;
-                $collection->collectionName = $collectionName;
-                $collection->collectionSize = $collectionSize;
-                $collection->propertyCount = "0"; //pending
-                $collection->save();
+                $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
+                $collection_json_data = file_get_contents($collection_api_url);
+                $collection_response_data = json_decode($collection_json_data);
 
-                $collection_id = $collection->id;
+                $collectionName = $collection_response_data->slug;
+                $collectionSize = $collection_response_data->stats->total_supply;
+                $collection_id = null;
 
                 $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
 
@@ -221,6 +219,21 @@ class WebScraperController extends Controller
                 $item_response_data = json_decode($item_json_data);
                 $item_ids = $item_response_data->items;
                 $item_info = $item_response_data->basePropDefs;
+
+                $property_count = 0;
+                for($i = 0; $i < count($item_info); $i++){
+                    if($item_info[$i]->type === "category"){
+                        $property_count++;
+                    }
+                }
+
+                $collection = new CollectionModel;
+                $collection->collectionName = $collectionName;
+                $collection->collectionSize = $collectionSize;
+                $collection->propertyCount = $property_count; //pending
+                $collection->save();
+
+                $collection_id = $collection->id;
 
                 for($i = 0; $i < count($item_ids); $i++){
                     $CollectionItemModel = new CollectionItemModel;
@@ -310,7 +323,11 @@ class WebScraperController extends Controller
                 return response()->json($data,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
             }catch(Exception $err){
                 DB::rollback();
-                return response()->json($err,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+                return response()->json(
+                    [
+                        "message" => $err->getMessage(),
+                        "status" => "Not Found"
+                    ],  500, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
             }
         }else{
             $collections = array();
