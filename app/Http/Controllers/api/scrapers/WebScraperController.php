@@ -30,13 +30,14 @@ class WebScraperController extends Controller
                 $collection_response_data = json_decode($collection_json_data);
 
                 $collectionName = $collection_response_data->slug;
-                $collectionSize = $collection_response_data->stats->total_supply;
+                $total_supply = $collection_response_data->stats->total_supply;
                 $collection_id = null;
                 $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
 
                 $item_json_data = file_get_contents($item_api_url);
                 $item_response_data = json_decode($item_json_data);
                 $item_ids = $item_response_data->items;
+
                 $item_info = $item_response_data->basePropDefs;
                 $property_count = 0;
                 for($i = 0; $i < count($item_info); $i++){
@@ -47,18 +48,21 @@ class WebScraperController extends Controller
 
                 $collection = new CollectionModel;
                 $collection->collectionName = $collectionName;
-                $collection->collectionSize = $collectionSize;
-                $collection->propertyCount = "0"; //pending
+                $collection->collectionSize = count($item_ids);
+                $collection->propertyCount = $property_count;
                 $collection->save();
 
                 $collection_id = $collection->id;
 
                 for($i = 0; $i < count($item_ids); $i++){
+                    $total_score_value = 0;
+
                     $CollectionItemModel = new CollectionItemModel;
                     $CollectionItemModel->collection_item_id = $item_ids[$i][0];
                     $CollectionItemModel->collection_id = $collection_id;
-                    $CollectionItemModel->score = "0"; //pending
+                    $CollectionItemModel->score = $total_score_value; //pending
                     $CollectionItemModel->save();
+
                     for($j = 0; $j < count($item_ids[$i]); $j++){
                         if($item_ids[$i][$j] >= 0 && is_int($item_ids[$i][$j])){
                             if($item_info[$j]->type === "category"){
@@ -68,10 +72,12 @@ class WebScraperController extends Controller
                                 $PropertiesModel = new PropertiesModel;
                                 $PropertiesModel->property_name = $item_info[$index]->name;
                                 $PropertiesModel->value = $item_info[$index]->pvs[$data][0];
-                                $PropertiesModel->scoreContribution = 0; //pending
+                                $PropertiesModel->scoreContribution = number_format(($total_supply / $item_info[$index]->pvs[$data][1]), 2, '.', '');
                                 $PropertiesModel->supply = $item_info[$index]->pvs[$data][1];
                                 $PropertiesModel->collection_item_id = $CollectionItemModel->id;
                                 $PropertiesModel->save();
+
+                                $total_score_value = $total_score_value + number_format(($total_supply / $item_info[$index]->pvs[$data][1]), 2, '.', '');
                             }
                         }
                     }
@@ -83,6 +89,13 @@ class WebScraperController extends Controller
                 }
                 DB::commit();
 
+                DB::table('collection_item_models')
+                ->where('id', $CollectionItemModel->id)
+                ->update(
+                    [
+                        'score' => $total_score_value
+                    ]
+                );
 
                 $collections = array();
                 $properties = array();
@@ -210,7 +223,6 @@ class WebScraperController extends Controller
                 $collection_response_data = json_decode($collection_json_data);
 
                 $collectionName = $collection_response_data->slug;
-                $collectionSize = $collection_response_data->stats->total_supply;
                 $collection_id = null;
 
                 $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
@@ -219,6 +231,8 @@ class WebScraperController extends Controller
                 $item_response_data = json_decode($item_json_data);
                 $item_ids = $item_response_data->items;
                 $item_info = $item_response_data->basePropDefs;
+
+                $total_supply = $collection_response_data->stats->total_supply;
 
                 $property_count = 0;
                 for($i = 0; $i < count($item_info); $i++){
@@ -229,17 +243,30 @@ class WebScraperController extends Controller
 
                 $collection = new CollectionModel;
                 $collection->collectionName = $collectionName;
-                $collection->collectionSize = $collectionSize;
-                $collection->propertyCount = $property_count; //pending
+                $collection->collectionSize = count($item_ids);
+                $collection->propertyCount = $property_count;
                 $collection->save();
 
                 $collection_id = $collection->id;
 
                 for($i = 0; $i < count($item_ids); $i++){
+                    $total_score_value = 0;
+
+                    for($j = 0; $j < count($item_ids[$i]); $j++){
+                        if($item_ids[$i][$j] >= 0 && is_int($item_ids[$i][$j])){
+                            if($item_info[$j]->type === "category"){
+                                $data = $item_ids[$i][$j];
+                                $index = $j;
+
+                                $total_score_value = $total_score_value + number_format(($total_supply / $item_info[$index]->pvs[$data][1]), 2, '.', '');
+                            }
+                        }
+                    }
+
                     $CollectionItemModel = new CollectionItemModel;
                     $CollectionItemModel->collection_item_id = $item_ids[$i][0];
                     $CollectionItemModel->collection_id = $collection_id;
-                    $CollectionItemModel->score = "0"; //pending
+                    $CollectionItemModel->score = $total_score_value; // total score is the addition of all scores per traits
                     $CollectionItemModel->save();
                     for($j = 0; $j < count($item_ids[$i]); $j++){
                         if($item_ids[$i][$j] >= 0 && is_int($item_ids[$i][$j])){
@@ -250,7 +277,7 @@ class WebScraperController extends Controller
                                 $PropertiesModel = new PropertiesModel;
                                 $PropertiesModel->property_name = $item_info[$index]->name;
                                 $PropertiesModel->value = $item_info[$index]->pvs[$data][0];
-                                $PropertiesModel->scoreContribution = 0; //pending
+                                $PropertiesModel->scoreContribution = number_format(($total_supply / $item_info[$index]->pvs[$data][1]), 2, '.', '');
                                 $PropertiesModel->supply = $item_info[$index]->pvs[$data][1];
                                 $PropertiesModel->collection_item_id = $CollectionItemModel->id;
                                 $PropertiesModel->save();
@@ -282,7 +309,7 @@ class WebScraperController extends Controller
                     $properties_models = DB::table('properties_models')
                                 ->join('collection_item_models', 'collection_item_models.id', '=', 'properties_models.collection_item_id')
                                 ->join('collection_models', 'collection_models.id', '=', 'collection_item_models.collection_id')
-                                ->select('properties_models.*')
+                                ->select('properties_models.*', 'collection_item_models.score', 'collection_item_models.collection_item_id')
                                 ->where('collection_models.id', $exist->id)
                                 ->where('properties_models.collection_item_id', $data_collection_item->id)
                                 ->get();
@@ -302,8 +329,8 @@ class WebScraperController extends Controller
                     array_push(
                         $collections,
                         array(
-                            "id" => $data->id,
-                            "score" => $data->scoreContribution,
+                            "id" => $data->collection_item_id,
+                            "score" => $data->score,
                             "rank" => "pending",
                             "properties" => $properties
                         )
@@ -343,7 +370,7 @@ class WebScraperController extends Controller
                 $properties_models = DB::table('properties_models')
                             ->join('collection_item_models', 'collection_item_models.id', '=', 'properties_models.collection_item_id')
                             ->join('collection_models', 'collection_models.id', '=', 'collection_item_models.collection_id')
-                            ->select('properties_models.*')
+                            ->select('properties_models.*', 'collection_item_models.score', 'collection_item_models.collection_item_id')
                             ->where('collection_models.id', $exist->id)
                             ->where('properties_models.collection_item_id', $data_collection_item->id)
                             ->get();
@@ -363,8 +390,8 @@ class WebScraperController extends Controller
                 array_push(
                     $collections,
                     array(
-                        "id" => $data->id,
-                        "score" => $data->scoreContribution,
+                        "id" => $data->collection_item_id,
+                        "score" => $data->score,
                         "rank" => "pending",
                         "properties" => $properties
                     )
