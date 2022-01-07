@@ -22,16 +22,16 @@ class WebScraperController extends Controller
                 ->first();
 
         if(!$exist){
-            $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
-            $collection_json_data = file_get_contents($collection_api_url);
-            $collection_response_data = json_decode($collection_json_data);
 
-            $collectionName = $collection_response_data->slug;
-            $collectionSize = $collection_response_data->stats->total_supply;
-            $collection_id = null;
             DB::beginTransaction();
             try{
+                $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
+                $collection_json_data = file_get_contents($collection_api_url);
+                $collection_response_data = json_decode($collection_json_data);
 
+                $collectionName = $collection_response_data->slug;
+                $collectionSize = $collection_response_data->stats->total_supply;
+                $collection_id = null;
                 $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
 
                 $item_json_data = file_get_contents($item_api_url);
@@ -140,7 +140,7 @@ class WebScraperController extends Controller
                 );
             }catch(Exception $err){
                 DB::rollback();
-                dd($err);
+                dd($err->getMessage());
             }
         }else{
             $collections = array();
@@ -198,22 +198,21 @@ class WebScraperController extends Controller
 
     public function GetCollectionAPI($request){
 
-        $request_collection = 'cryptopunks';
-
         $exist = DB::table('collection_models')
                 ->where('collectionName', $request)
                 ->first();
 
         if(!$exist){
-            $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
-            $collection_json_data = file_get_contents($collection_api_url);
-            $collection_response_data = json_decode($collection_json_data);
-
-            $collectionName = $collection_response_data->slug;
-            $collectionSize = $collection_response_data->stats->total_supply;
-            $collection_id = null;
             DB::beginTransaction();
             try{
+                $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
+                $collection_json_data = file_get_contents($collection_api_url);
+                $collection_response_data = json_decode($collection_json_data);
+
+                $collectionName = $collection_response_data->slug;
+                $collectionSize = $collection_response_data->stats->total_supply;
+                $collection_id = null;
+
                 $item_api_url = 'https://projects.rarity.tools/static/staticdata/' .  $request . '.json';
 
                 $item_json_data = file_get_contents($item_api_url);
@@ -324,7 +323,11 @@ class WebScraperController extends Controller
                 return response()->json($data,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
             }catch(Exception $err){
                 DB::rollback();
-                return response()->json($err,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+                return response()->json(
+                    [
+                        "message" => $err->getMessage(),
+                        "status" => "Not Found"
+                    ],  500, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
             }
         }else{
             $collections = array();
