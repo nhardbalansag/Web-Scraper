@@ -423,12 +423,13 @@ class WebScraperController extends Controller
             $inc = 0;
 
             foreach($collection_item as $key => $item){
+                $inc++;
                 array_push(
                     $sorting_array,
                     array(
                         "id" => $item['data']['id'],
                         "score" => $item['data']['score'],
-                        "rank" => ($inc + 1),
+                        "rank" => $inc,
                         "properties" => $item['data']['properties']
                     )
                 );
