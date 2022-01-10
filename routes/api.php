@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\api\scrapers\WebScraperController;
 
 
-Route::get('/test-api/{slug}', [WebScraperController::class, 'GetCollectionAPI']);
+Route::get('/test-api/{slug}', [WebScraperController::class, 'GetScrapeData']);
 
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
