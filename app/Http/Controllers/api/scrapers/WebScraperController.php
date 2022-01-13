@@ -3,12 +3,14 @@
 namespace App\Http\Controllers\api\scrapers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 use Exception;
 
 class WebScraperController extends Controller
 {
+    public $CONFIG_LIMIT = 50;
 
-    public function SortToArray($item_ids, $item_info, $total_supply){
+    public function SortToArray($item_ids, $item_info, $total_supply, $limit, $offset, $from_func){
 
         $collection_item_id = null;
         $rank = null;
@@ -84,20 +86,36 @@ class WebScraperController extends Controller
 
         arsort($collection_item);
         $inc = 0;
-
+        $set = false;
         foreach($collection_item as $key => $item){
             $inc++;
-            array_push(
-                $sorting_array,
-                array(
-                    "id" => $item['data']['id'],
-                    "score" => $item['data']['score'],
-                    "rank" => $inc,
-                    "properties" => $item['data']['properties']
-                )
-            );
+            if($from_func){
+                if(!$set){
+                    $set = ($inc - 1) === ($offset > 0 ? ($offset - 1) : 0) ? true : false;
+                }
+                if($set && ($inc - 1) <= (count(range($offset, $limit > 0 ? ($limit - 1) : 0)) > ($this->CONFIG_LIMIT - 1) ? ($this->CONFIG_LIMIT - 1) : ($limit - 1))){
+                    array_push(
+                        $sorting_array,
+                        array(
+                            "id" => $item['data']['id'],
+                            "score" => $item['data']['score'],
+                            "rank" => $inc,
+                            "properties" => $item['data']['properties']
+                        )
+                    );
+                }
+            }else{
+                array_push(
+                    $sorting_array,
+                    array(
+                        "id" => $item['data']['id'],
+                        "score" => $item['data']['score'],
+                        "rank" => $inc,
+                        "properties" => $item['data']['properties']
+                    )
+                );
+            }
         }
-
         return $sorting_array;
     }
 
@@ -106,7 +124,7 @@ class WebScraperController extends Controller
         $collectionName = null;
         $collectionSize = 0;
         $propertyCount = 0;
-
+        $from_func = false;
         $collection_item_id = null;
 
         $property_count = 0;
@@ -143,7 +161,7 @@ class WebScraperController extends Controller
             $collectionSize = count($item_ids);
             $propertyCount = $property_count;
 
-            $collection_item = $this->SortToArray($item_ids, $item_info, $total_supply);
+            $collection_item = $this->SortToArray($item_ids, $item_info, $total_supply, $limit = null, $offset = null, $from_func);
 
             foreach($collection_item as $key => $item){
                 $collection_item_id = $item['id'];
@@ -171,25 +189,27 @@ class WebScraperController extends Controller
             return response()->json(
                 [
                     "message" => $err->getMessage(),
-                    "status" => "Error"
+                    "status" => false
                 ],  500, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT
             );
         }
         return response()->json($data,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
     }
 
-    public function GetScrapeData($request){
-
+    public function GetScrapeData(Request $request_data, $request){
+        $offset = array_key_exists("offset", $request_data->all()) ? $request_data->offset : 0;
+        $limit = array_key_exists("limit", $request_data->all()) ? $request_data->limit : $this->CONFIG_LIMIT;
         $data = null;
         $collectionName = null;
         $collectionSize = 0;
         $propertyCount = 0;
 
+        $from_func = true;
+
         $property_count = 0;
-
         $sorting_array = array();
-
         try{
+
             $collection_api_url = 'https://collections.rarity.tools/collectionDetails/' . $request;
             $collection_json_data = file_get_contents($collection_api_url);
             $collection_response_data = json_decode($collection_json_data);
@@ -219,7 +239,7 @@ class WebScraperController extends Controller
             $collectionSize = count($item_ids);
             $propertyCount = $property_count;
 
-            $sorting_array = $this->SortToArray($item_ids, $item_info, $total_supply);
+            $sorting_array = $this->SortToArray($item_ids, $item_info, $total_supply, $limit, $offset, $from_func);
 
             $data = array(
                 "collectionName" => $collectionName,
@@ -232,10 +252,29 @@ class WebScraperController extends Controller
             return response()->json(
                 [
                     "message" => $err->getMessage(),
-                    "status" => "Not Found"
+                    "status" => false
                 ],  500, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT
             );
         }
         return response()->json($data,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+    }
+
+    public function SingleAsset($address, $id){
+        try{
+
+            $url = 'https://api.opensea.io/api/v1/assets?asset_contract_address=' . $address . '&token_ids=' . $id;
+            $content = file_get_contents($url);
+            $response = json_decode($content)->assets[0];
+
+        }catch(Exception $err){
+            return response()->json(
+                [
+                    "message" => $err->getMessage(),
+                    "status" => false
+                ],  500, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT
+            );
+        }
+
+        return response()->json($response,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
     }
 }
