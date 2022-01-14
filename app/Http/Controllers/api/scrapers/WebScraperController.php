@@ -8,7 +8,7 @@ use Exception;
 
 class WebScraperController extends Controller
 {
-    public $CONFIG_LIMIT = 51;
+    public $CONFIG_LIMIT = 50;
 
     public function SortToArray($item_ids, $item_info, $total_supply, $limit, $offset, $from_func){
 
@@ -87,6 +87,7 @@ class WebScraperController extends Controller
         arsort($collection_item);
         $inc = 0;
         $set = false;
+        $limit = $limit > $this->CONFIG_LIMIT ? $this->CONFIG_LIMIT : $limit;
         foreach($collection_item as $key => $item){
             $inc++;
             if($from_func){
