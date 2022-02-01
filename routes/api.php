@@ -13,6 +13,10 @@ Route::prefix('v1')->group(function () {
     Route::prefix('asset')->group(function () {
         Route::get('/{address}/{id}', [WebScraperController::class, 'SingleAsset']);
     });
+
+    Route::prefix('upcoming-collection')->group(function () {
+        Route::get('/', [WebScraperController::class, 'UpcomingCollection']);
+    });
 });
 
 Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
