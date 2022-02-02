@@ -5,6 +5,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Exception;
 use Carbon\Carbon;
+use Abraham\TwitterOAuth\TwitterOAuth;
     class WebScraperController extends Controller
     {
         public $CONFIG_LIMIT = 50;
@@ -281,9 +282,26 @@ use Carbon\Carbon;
 
         public function UpcomingCollection(){
 
+
             $json = file_get_contents('https://api.sheety.co/4822114e0a3db9076285b64ff5574b69/testInputApi/sheet1');
 
             $data = json_decode($json);
+
+            $twitterFollower = 0;
+            $cover = null;
+
+            if(!empty($data->sheet1[0]->twitter) && substr_count($data->sheet1[0]->twitter, '/') === 3){
+                $connection = new TwitterOAuth(
+                    "gDg8mP5kVf70FiYIhYdmaPFbo",
+                    "yYRMMi42UGb3163Y6s0zVxRqXpX1T9acDaYSTQuWvO8JuBQ5xb",
+                    "1488519798397239297-XQWLl6dpDMPBESCEs9OQY6SWLykyXb",
+                    "TKKPLeX6olRhKu7ue7jD6FWJhY53hEtJeqf7TsrYru2aX"
+                );
+
+                $Twitter_response = $connection->get('statuses/user_timeline', ['screen_name' => explode('/', $data->sheet1[0]->twitter)[3]]);
+                $twitterFollower = $Twitter_response[0]->user->followers_count;
+                $cover = $Twitter_response[0]->user->profile_image_url_https;
+            }
 
             $supply = (string)$data->sheet1[0]->supply;
             $supply_data = "";
@@ -326,14 +344,12 @@ use Carbon\Carbon;
                 "twitter" => (string)$data->sheet1[0]->twitter,
                 "discord" => (string)$data->sheet1[0]->discord,
                 "website" => (string)$data->sheet1[0]->website,
-                "cover" => $previews ? $previews[0] : null, //pending
-                "preview" => $previews, //pending
-                "twitterFollower" => null, // pending
+                "cover" => $cover ? $cover : ($previews ? $previews[0] : null),
+                "preview" => $previews,
+                "twitterFollower" => $twitterFollower,
                 "discordFollower" => null,
             );
 
             return response()->json($return_data,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
         }
     }
-
-
