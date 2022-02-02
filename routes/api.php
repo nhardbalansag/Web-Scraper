@@ -15,7 +15,7 @@ Route::prefix('v1')->group(function () {
     });
 
     Route::prefix('upcoming-collection')->group(function () {
-        Route::get('/', [WebScraperController::class, 'UpcomingCollection']);
+        Route::get('/test', [WebScraperController::class, 'UpcomingCollection']);
     });
 });
 
