@@ -281,77 +281,124 @@ use Abraham\TwitterOAuth\TwitterOAuth;
         }
 
         public function UpcomingCollection(){
+            try{
+                $json = file_get_contents('https://api.sheety.co/9b0f8dd0e1d482e54c7fdf1a0f1c64a0/apiTest/sheet1');
 
+                $data = json_decode($json);
+                $return_data_arr = array();
+                $twitterFollower = 0;
+                $discordFollower = 0;
+                $cover = null;
+                $twitterlink = null;
+                foreach($data->sheet1 as $index => $element){
 
-            $json = file_get_contents('https://api.sheety.co/4822114e0a3db9076285b64ff5574b69/testInputApi/sheet1');
+                    try{
 
-            $data = json_decode($json);
+                        $discordname = explode('/', $element->discord)[count(explode('/', $element->discord))];
 
-            $twitterFollower = 0;
-            $cover = null;
+                        $discrod_get_url = file_get_contents('https://discord.com/api/v9/invites/' . $discordname . '?with_counts=true&with_expiration=true');
+                        $discordJSON = json_decode($discrod_get_url);
+                        $discordFollower = $discordJSON->approximate_member_count;
 
-            if(!empty($data->sheet1[0]->twitter) && substr_count($data->sheet1[0]->twitter, '/') === 3){
-                $connection = new TwitterOAuth(
-                    "gDg8mP5kVf70FiYIhYdmaPFbo",
-                    "yYRMMi42UGb3163Y6s0zVxRqXpX1T9acDaYSTQuWvO8JuBQ5xb",
-                    "1488519798397239297-XQWLl6dpDMPBESCEs9OQY6SWLykyXb",
-                    "TKKPLeX6olRhKu7ue7jD6FWJhY53hEtJeqf7TsrYru2aX"
-                );
+                    }catch(Exception $err){
+                        $discrod_get_url = null;
+                    }
 
-                $Twitter_response = $connection->get('statuses/user_timeline', ['screen_name' => explode('/', $data->sheet1[0]->twitter)[3]]);
-                $twitterFollower = $Twitter_response[0]->user->followers_count;
-                $cover = $Twitter_response[0]->user->profile_image_url_https;
-            }
+                    if(!empty($element->twitter) && substr_count($element->twitter, '/') === 3){
+                        $connection = new TwitterOAuth(
+                            "gDg8mP5kVf70FiYIhYdmaPFbo",
+                            "yYRMMi42UGb3163Y6s0zVxRqXpX1T9acDaYSTQuWvO8JuBQ5xb",
+                            "1488519798397239297-XQWLl6dpDMPBESCEs9OQY6SWLykyXb",
+                            "TKKPLeX6olRhKu7ue7jD6FWJhY53hEtJeqf7TsrYru2aX"
+                        );
+                        $Twitter_response = $connection->get('statuses/user_timeline', ['screen_name' => explode('/', $element->twitter)[3]]);
+                        if(is_array($Twitter_response)){
+                            $twitterFollower = $Twitter_response[0]->user->followers_count;
+                            $cover = $Twitter_response[0]->user->profile_image_url_https;
+                            $temp_link = null;
+                            for($i = 0; $i < (count(explode('.', $cover)) - 1); $i++){
+                                if($i !== (count(explode('.', $cover)) - 1)){
+                                    $temp_link = $temp_link . explode('.', $cover)[$i] . '.';
+                                }
+                            }
 
-            $supply = (string)$data->sheet1[0]->supply;
-            $supply_data = "";
-            for($i = 0; $i < strlen($supply); $i++){
-                if($supply[$i] !== ","){
-                    $supply_data = $supply_data . $supply[$i];
-                }
-            }
+                            $t_user = explode('/', $temp_link)[count(explode('/', $temp_link)) - 1];
+                            $t_user = explode('_', $t_user)[0];
+                            $t_user = $t_user . "_bigger.jpg";
+                            $base = null;
+                            for($i = 0; $i < (count(explode('/', $temp_link)) - 1); $i++){
+                                if($i !== (count(explode('/', $temp_link)) - 1)){
+                                    $base = $base . explode('/', $temp_link)[$i] . '/';
+                                }
+                            }
+                            $twitterlink = (string)$element->twitter;
+                            $cover = $base . $t_user;
+                        }
+                    }
 
-            $previews = array();
-            $prev_data_condition = array();
+                    $supply = (string)$element->supply;
+                    $supply_data = "";
+                    for($i = 0; $i < strlen($supply); $i++){
+                        if($supply[$i] !== ","){
+                            $supply_data = $supply_data . $supply[$i];
+                        }
+                    }
 
-            foreach($data->sheet1[0] as $index => $element){
-                if(str_contains($element, 'https://drive.google.com')){
-                    array_push($prev_data_condition, $element);
-                }
-            }
+                    $previews = array();
+                    $prev_data_condition = array();
 
-            $base = "https://drive.google.com/uc?id=";
-            $link_data = "";
-            foreach($prev_data_condition as $index => $item){
-                if(!empty($item) && $item !== " " && substr_count($item, '/') === 6){
-                    $link_data = explode('/', $item)[5];
-                    array_push($previews, $base . $link_data);
+                    foreach($element as $index_data => $element_data){
+                        if(str_contains($element_data, 'https://drive.google.com')){
+                            array_push($prev_data_condition, $element_data);
+                        }
+                    }
+
+                    $base = "https://drive.google.com/uc?id=";
                     $link_data = "";
+                    foreach($prev_data_condition as $index_data => $item){
+                        if(!empty($item) && $item !== " " && substr_count($item, '/') === 6){
+                            $link_data = explode('/', $item)[5];
+                            array_push($previews, $base . $link_data);
+                            $link_data = "";
+                        }
+                    }
+
+                    $releaseDate = Carbon::createFromFormat('Y-m-d H:i:s', '2022-02-12 00:00:00')->timestamp;
+
+                    $presalePrice = empty($element->presalePrice) ? null : ($element->presalePrice === " " ? null : $element->presalePrice);
+
+                    $return_data = array(
+                        "id" => (int)$element->id,
+                        "name" => (string)$element->name,
+                        "description" => (string)$element->description,
+                        "platform" => (string)$element->platform,
+                        "mintPrice" => (string)$element->mintPrice,
+                        "presalePrice" => $presalePrice,
+                        "supply" => (int)$supply_data,
+                        "releaseDate" => (int)$releaseDate,
+                        "twitter" => $twitterlink,
+                        "discord" => (string)$element->discord,
+                        "website" => (string)$element->website,
+                        "cover" => $cover ? $cover : ($previews ? $previews[0] : null),
+                        "preview" => $previews,
+                        "twitterFollower" => $twitterFollower,
+                        "discordFollower" => $discordFollower
+                    );
+
+                    array_push(
+                        $return_data_arr,
+                        $return_data
+                    );
                 }
+            }catch(Exception $mainErr){
+                return response()->json(
+                    [
+                        "message" => $mainErr->getMessage(),
+                        "status" => false
+                    ],  500, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT
+                );
             }
-
-            $releaseDate = Carbon::createFromFormat('Y-m-d H:i:s', '2022-02-12 00:00:00')->timestamp;
-
-            $presalePrice = empty($data->sheet1[0]->presalePrice) ? null : ($data->sheet1[0]->presalePrice === " " ? null : $data->sheet1[0]->presalePrice);
-
-            $return_data = array(
-                "id" => (int)$data->sheet1[0]->id,
-                "name" => (string)$data->sheet1[0]->name,
-                "description" => (string)$data->sheet1[0]->description,
-                "platform" => (string)$data->sheet1[0]->platform,
-                "mintPrice" => (string)$data->sheet1[0]->mintPrice,
-                "presalePrice" => $presalePrice,
-                "supply" => (int)$supply_data,
-                "releaseDate" => (int)$releaseDate,
-                "twitter" => (string)$data->sheet1[0]->twitter,
-                "discord" => (string)$data->sheet1[0]->discord,
-                "website" => (string)$data->sheet1[0]->website,
-                "cover" => $cover ? $cover : ($previews ? $previews[0] : null),
-                "preview" => $previews,
-                "twitterFollower" => $twitterFollower,
-                "discordFollower" => null,
-            );
-
-            return response()->json($return_data,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
+            return response()->json($return_data_arr,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
         }
     }
+
