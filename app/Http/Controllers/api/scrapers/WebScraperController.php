@@ -312,12 +312,14 @@ use Abraham\TwitterOAuth\TwitterOAuth;
             }
 
             $previews = array();
-            $prev_data_condition = array(
-                $data->sheet1[0]->preview1,
-                $data->sheet1[0]->preview2,
-                $data->sheet1[0]->preview3,
-                $data->sheet1[0]->preview4
-            );
+            $prev_data_condition = array();
+
+            foreach($data->sheet1[0] as $index => $element){
+                if(str_contains($element, 'https://drive.google.com')){
+                    array_push($prev_data_condition, $element);
+                }
+            }
+
             $base = "https://drive.google.com/uc?id=";
             $link_data = "";
             foreach($prev_data_condition as $index => $item){
