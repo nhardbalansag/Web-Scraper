@@ -293,13 +293,12 @@ use Abraham\TwitterOAuth\TwitterOAuth;
                 foreach($data->sheet1 as $index => $element){
 
                     try{
-
-                        $discordname = explode('/', $element->discord)[count(explode('/', $element->discord))];
-
-                        $discrod_get_url = file_get_contents('https://discord.com/api/v9/invites/' . $discordname . '?with_counts=true&with_expiration=true');
-                        $discordJSON = json_decode($discrod_get_url);
-                        $discordFollower = $discordJSON->approximate_member_count;
-
+                        $discordname = !empty($element->discord) ? explode('/', $element->discord)[count(explode('/', $element->discord)) - 1] : null;
+                        if(!empty($discordname)){
+                            $discrod_get_url = file_get_contents('https://discord.com/api/v9/invites/' . $discordname . '?with_counts=true&with_expiration=true');
+                            $discordJSON = json_decode($discrod_get_url);
+                            $discordFollower = $discordJSON->approximate_member_count;
+                        }
                     }catch(Exception $err){
                         $discrod_get_url = null;
                     }

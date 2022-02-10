@@ -16,5 +16,3 @@ Route::get('/', function () {
 //         Route::get('/', [WebScraperController::class, 'SingleAsset']);
 //     });
 // });
-
-
