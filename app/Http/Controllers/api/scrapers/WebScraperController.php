@@ -400,4 +400,3 @@ use Abraham\TwitterOAuth\TwitterOAuth;
             return response()->json($return_data_arr,  200, [], JSON_UNESCAPED_SLASHES|JSON_PRETTY_PRINT);
         }
     }
-
