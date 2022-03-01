@@ -18,7 +18,14 @@ class CreateCollectionItemModelsTable extends Migration
             $table->string('collection_item_id');
             $table->integer('score');
             $table->integer('rank');
-            $table->string('collection_id');
+
+            $table->integer('collection_id')->unsigned();
+            $table->foreign('collection_id')
+            ->references('id')
+            ->on('collection_models')
+            ->onDelete('cascade')
+            ->onUpdate('cascade');
+
             $table->timestamps();
         });
     }

@@ -15,7 +15,7 @@ class CreateCollectionModelsTable extends Migration
     {
         Schema::create('collection_models', function (Blueprint $table) {
             $table->increments('id');
-            $table->string('collectionName');
+            $table->string('collectionName')->unique();
             $table->integer('collectionSize');
             $table->integer('propertyCount');
             $table->timestamps();
