@@ -17,8 +17,8 @@ class CreatePropertiesModelsTable extends Migration
             $table->increments('id');
             $table->string('property_name');
             $table->string('value')->nullable();
-            $table->string('scoreContribution')->nullable();
-            $table->string('supply')->nullable();
+            $table->integer('scoreContribution')->nullable();
+            $table->integer('supply')->nullable();
             // foreign
             $table->integer('collection_item_id')->unsigned();
             $table->foreign('collection_item_id')

@@ -16,9 +16,16 @@ class CreateCollectionItemModelsTable extends Migration
         Schema::create('collection_item_models', function (Blueprint $table) {
             $table->increments('id');
             $table->string('collection_item_id');
-            $table->string('score');
-            $table->string('rank');
-            $table->string('collection_id');
+            $table->integer('score');
+            $table->integer('rank');
+
+            $table->integer('collection_id')->unsigned();
+            $table->foreign('collection_id')
+            ->references('id')
+            ->on('collection_models')
+            ->onDelete('cascade')
+            ->onUpdate('cascade');
+
             $table->timestamps();
         });
     }
